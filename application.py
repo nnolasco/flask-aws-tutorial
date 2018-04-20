@@ -1,51 +1,53 @@
-'''
-Simple Flask application to test deployment to Amazon Web Services
-Uses Elastic Beanstalk and RDS
+import flask
 
-Author: Scott Rodkey - rodkeyscott@gmail.com
+base_url = 'flaskapitest-env.elasticbeanstalk.com'
 
-Step-by-step tutorial: https://medium.com/@rodkey/deploying-a-flask-application-on-aws-a72daba6bb80
-'''
+application = flask.Flask(__name__)
 
-from flask import Flask, render_template, request
-from application import db
-from application.models import Data
-from application.forms import EnterDBInfo, RetrieveDBInfo
-
-# Elastic Beanstalk initalization
-application = Flask(__name__)
+#Set application.debug=true to enable tracebacks on Beanstalk log output.
+#Make sure to remove this line before deploying to production.
 application.debug=True
-# change this to your own value
-application.secret_key = 'cC1YCIWOj9GgWspgNEo2'   
 
-@application.route('/', methods=['GET', 'POST'])
-@application.route('/index', methods=['GET', 'POST'])
-def index():
-    form1 = EnterDBInfo(request.form) 
-    form2 = RetrieveDBInfo(request.form) 
-    
-    if request.method == 'POST' and form1.validate():
-        data_entered = Data(notes=form1.dbNotes.data)
-        try:     
-            db.session.add(data_entered)
-            db.session.commit()        
-            db.session.close()
-        except:
-            db.session.rollback()
-        return render_template('thanks.html', notes=form1.dbNotes.data)
-        
-    if request.method == 'POST' and form2.validate():
-        try:   
-            num_return = int(form2.numRetrieve.data)
-            query_db = Data.query.order_by(Data.notes.asc()).limit(num_return)
-            for q in query_db:
-                print(q.notes)
-            db.session.close()
-        except:
-            db.session.rollback()
-        return render_template('results.html', results=query_db, num_return=num_return)                
-    
-    return render_template('index.html', form1=form1, form2=form2)
+tasks = [
+    {
+        'id': 1,
+        'title': u'Buy groceries',
+        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
+        'done': False
+    },
+    {
+        'id': 2,
+        'title': u'Learn Python',
+        'description': u'Need to find a good Python tutorial on the web',
+        'done': False
+    }
+]
+
+@application.errorhandler(400)
+def not_found(error):
+    return flask.make_response(flask.jsonify( { 'error': 'Bad request' } ), 400)
+
+@application.errorhandler(404)
+def not_found(error):
+    return flask.make_response(flask.jsonify( { 'error': 'Not found' } ), 404)
+
+@application.route('/')
+def hello_world():
+    return "Hello world!"
+
+@application.route('/todo/api/v1.0/tasks', methods = ['GET'])
+def get_tasks():
+    return flask.jsonify( { 'tasks': map(make_public_task, tasks) } )
+
+def make_public_task(task):
+    new_task = {}
+    for field in task:
+        if field == 'id':
+            new_task['uri'] = base_url + '/todo/api/v1.0/task/' + str(task[field])
+        else:
+            new_task[field] = task[field]
+    return new_task
+
 
 if __name__ == '__main__':
-    application.run(host='0.0.0.0')
+    application.run(host='0.0.0.0', debug=True)
