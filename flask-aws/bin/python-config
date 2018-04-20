@@ -1,4 +1,4 @@
-#!/mnt/c/Python36/flask_tutorial/flask-aws-tutorial/flask-aws/bin/python
+#!/mnt/c/Python36/flask-apis/flask-aws-tutorial/flask-aws/bin/python
 
 import sys
 import getopt

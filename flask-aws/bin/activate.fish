@@ -36,7 +36,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/mnt/c/Python36/flask_tutorial/flask-aws-tutorial/flask-aws"
+set -gx VIRTUAL_ENV "/mnt/c/Python36/flask-apis/flask-aws-tutorial/flask-aws"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
